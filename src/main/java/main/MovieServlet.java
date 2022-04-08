@@ -1,7 +1,9 @@
 package main;
 
 import com.google.gson.Gson;
+import data.Config;
 import data.Movie;
+import data.MySQLMoviesDAO;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -11,12 +13,15 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 @WebServlet(name = "MovieServlet", urlPatterns = "/movies/*")
 public class MovieServlet extends HttpServlet {
-    ArrayList<Movie> movies = new ArrayList<>();
-    int nextId = 1;
+    private MySQLMoviesDAO dao = new MySQLMoviesDAO();
+//    ArrayList<Movie> movies = new ArrayList<>();
+//    int nextId = 1;
 
     //  The next two methods, doGet and doPost, are copied from CodeupClassroom.
     //  They aren't very different from what I created, but they do at least work
@@ -27,9 +32,9 @@ public class MovieServlet extends HttpServlet {
 
         try {
             PrintWriter out = response.getWriter();
-            String movieString = new Gson().toJson(movies.toArray());
+            String movieString = new Gson().toJson(dao.all().toArray());
             out.println(movieString);
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
 
@@ -42,15 +47,15 @@ public class MovieServlet extends HttpServlet {
         BufferedReader br = request.getReader();
 
         Movie[] newMovies = new Gson().fromJson(br, Movie[].class);
-        for (Movie movie : newMovies) {
-            movie.setId(nextId++);
-            movies.add(movie);
-        }
-
+//        for (Movie movie : newMovies) {
+//            movie.setId(nextId++);
+//            movies.add(movie);
         try {
+            dao.insertAll(newMovies);
             PrintWriter out = response.getWriter();
             out.println("Movie(s) added");
-        } catch(IOException e) {
+        }
+        catch(IOException | SQLException e) {
             e.printStackTrace();
         }
     }
@@ -72,17 +77,12 @@ public class MovieServlet extends HttpServlet {
         int targetId = Integer.parseInt(uriParts[uriParts.length - 1]);
         Movie newMovie = new Gson().fromJson(req.getReader(),Movie.class);
 //      Look through movies, find movie with targetId
-        for (Movie m : movies) {
-            if (m.getId() == targetId) {
-                if (newMovie.getTitle() != null) {
-                    m.setTitle(newMovie.getTitle());
-                }
-            }
-        }
         try {
+            dao.update(newMovie);
             PrintWriter out = resp.getWriter();
             out.println(newMovie);
-        } catch (IOException e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -92,16 +92,11 @@ public class MovieServlet extends HttpServlet {
         String [] uriParts = req.getRequestURI().split("/");
         int targetId = Integer.parseInt(uriParts[uriParts.length - 1]);
         Movie foundMovie = null;
-        for (Movie m : movies) {
-            if (m.getId() == targetId) {
-                foundMovie = m;
-            }
-        }
-        movies.remove(foundMovie);
         try {
+            dao.delete(targetId);
             PrintWriter out = resp.getWriter();
             out.println(foundMovie.getTitle() + " has been deleted.");
-        } catch (IOException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
