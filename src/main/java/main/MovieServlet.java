@@ -1,8 +1,8 @@
 package main;
 
+import DAO.MySQLMoviesDAO;
 import com.google.gson.Gson;
 import data.Movie;
-import DAO.MySQLMoviesDAO;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,7 +17,7 @@ import java.sql.SQLException;
 // Updated version of the MovieServlet class which invokes methods from
 // MySQLMoviesDAO; it can be modified to invoke similar functionality
 // from other classes as well
-@WebServlet(name = "MovieServlet", urlPatterns = "/movies/*")
+@WebServlet(name = "MovieServlet", urlPatterns = "/movies/good")
 public class MovieServlet extends HttpServlet {
 
 // This instance variable is the object that provides data access methods:
