@@ -1,4 +1,6 @@
-package data;
+package DAO;
+
+import data.Movie;
 
 import java.sql.SQLException;
 import java.util.List;

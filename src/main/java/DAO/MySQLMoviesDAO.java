@@ -1,13 +1,12 @@
-package data;
+package DAO;
 
 import com.mysql.cj.jdbc.Driver;
+import Config.Config;
+import data.Movie;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executor;
 
 public class MySQLMoviesDAO implements MoviesDAO {
 
@@ -49,7 +48,28 @@ public class MySQLMoviesDAO implements MoviesDAO {
 
     @Override
     public Movie findOne(int id) {
-        return null;
+        Movie m = new Movie();
+        try {
+            PreparedStatement ps = conn.prepareStatement("Select * from movies where id = ?");
+            ResultSet rs = ps.executeQuery();
+            ps.setInt(1, id);
+            rs.next();
+
+            m.setTitle(rs.getString("title"));
+            m.setYear(rs.getInt("year"));
+            m.setGenre(rs.getString("genre"));
+            m.setRating(rs.getDouble("rating"));
+            m.setDirector(rs.getString("director"));
+            m.setActors(rs.getString("actors"));
+            m.setPlot(rs.getString("plot"));
+            m.setPoster(rs.getString("poster"));
+
+            rs.close();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return m;
     }
 
     @Override
@@ -78,18 +98,26 @@ public class MySQLMoviesDAO implements MoviesDAO {
 
     @Override
     public void update(Movie movie) throws SQLException {
-        PreparedStatement updateStmt = conn.prepareStatement("Update movies set title = ?, " +
-                "year = ?," +
-                "genre = ?, " +
-                "rating = ?, " +
-                "director = ? " +
-                "where id = ?", Statement.RETURN_GENERATED_KEYS);
-        updateStmt.setString(1,movie.getTitle());
-        updateStmt.setInt(2,movie.getYear());
-        updateStmt.setString(3,movie.getGenre());
-        updateStmt.setDouble(4,movie.getRating());
-        updateStmt.setString(5,movie.getDirector());
-        updateStmt.setInt(6,movie.getId());
+        int currentIndex = 1;
+        String qString = "Update movies set";
+        if (movie.getTitle() != null) {
+            qString += " title = ?,";
+        }
+        if (movie.getRating() != null) {
+            qString += " rating = ?,";
+        }
+        qString = qString.substring(0,qString.length() - 1);
+        qString += " where id = ?";
+        PreparedStatement updateStmt = conn.prepareStatement(qString, Statement.RETURN_GENERATED_KEYS);
+        if (movie.getTitle() != null) {
+            updateStmt.setString(currentIndex, movie.getTitle());
+            currentIndex++;
+        }
+        if (movie.getRating() != null) {
+            updateStmt.setDouble(currentIndex, movie.getRating());
+            currentIndex++;
+        }
+        updateStmt.setInt(currentIndex,movie.getId());
         updateStmt.executeUpdate();
 
         updateStmt.close();

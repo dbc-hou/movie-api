@@ -1,9 +1,8 @@
 package main;
 
 import com.google.gson.Gson;
-import data.Config;
 import data.Movie;
-import data.MySQLMoviesDAO;
+import DAO.MySQLMoviesDAO;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,17 +13,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 
+// Updated version of the MovieServlet class which invokes methods from
+// MySQLMoviesDAO; it can be modified to invoke similar functionality
+// from other classes as well
 @WebServlet(name = "MovieServlet", urlPatterns = "/movies/*")
 public class MovieServlet extends HttpServlet {
-    private MySQLMoviesDAO dao = new MySQLMoviesDAO();
-//    ArrayList<Movie> movies = new ArrayList<>();
-//    int nextId = 1;
 
-    //  The next two methods, doGet and doPost, are copied from CodeupClassroom.
-    //  They aren't very different from what I created, but they do at least work
+// This instance variable is the object that provides data access methods:
+// .all = fetch all records from the movies table
+// .insertAll = add one or more records to the movies table
+// .update = modify one or more fields in a specified movie
+// .delete = delete a specified movie from the table
+
+    private MySQLMoviesDAO dao = new MySQLMoviesDAO();
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -60,27 +62,17 @@ public class MovieServlet extends HttpServlet {
         }
     }
 
-//    @Override
-//    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-//        String [] uriParts = req.getRequestURI().split("/");
-//        int targetId = Integer.parseInt(uriParts[uriParts.length - 1]);
-//        try {
-//            PrintWriter out = response.getWriter();
-//            out.println("Movie(s) added");
-//        }
-//    }
-
-
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String [] uriParts = req.getRequestURI().split("/");
         int targetId = Integer.parseInt(uriParts[uriParts.length - 1]);
-        Movie newMovie = new Gson().fromJson(req.getReader(),Movie.class);
+        Movie updatedMovie = new Gson().fromJson(req.getReader(),Movie.class);
 //      Look through movies, find movie with targetId
         try {
-            dao.update(newMovie);
+            updatedMovie.setId(targetId);
+            dao.update(updatedMovie);
             PrintWriter out = resp.getWriter();
-            out.println(newMovie);
+            out.println(updatedMovie);
         }
         catch (Exception e) {
             e.printStackTrace();
