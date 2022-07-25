@@ -1,5 +1,7 @@
 package main;
 
+import DAO.InMemoryMoviesDAO;
+import DAO.MoviesDAO;
 import DAO.MySQLMoviesDAO;
 import com.google.gson.Gson;
 import data.Movie;
@@ -17,7 +19,7 @@ import java.sql.SQLException;
 // Updated version of the MovieServlet class which invokes methods from
 // MySQLMoviesDAO; it can be modified to invoke similar functionality
 // from other classes as well
-@WebServlet(name = "MovieServlet", urlPatterns = "/movies/good")
+@WebServlet(name = "MovieServlet", urlPatterns = "/movies/*")
 public class MovieServlet extends HttpServlet {
 
 // This instance variable is the object that provides data access methods:
@@ -26,7 +28,8 @@ public class MovieServlet extends HttpServlet {
 // .update = modify one or more fields in a specified movie
 // .delete = delete a specified movie from the table
 
-    private MySQLMoviesDAO dao = new MySQLMoviesDAO();
+    private MoviesDAO dao = new MySQLMoviesDAO();
+    private MoviesDAO imdao = new InMemoryMoviesDAO();
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) {
@@ -45,13 +48,9 @@ public class MovieServlet extends HttpServlet {
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
-
         BufferedReader br = request.getReader();
-
         Movie[] newMovies = new Gson().fromJson(br, Movie[].class);
-//        for (Movie movie : newMovies) {
-//            movie.setId(nextId++);
-//            movies.add(movie);
+
         try {
             dao.insertAll(newMovies);
             PrintWriter out = response.getWriter();
@@ -83,11 +82,10 @@ public class MovieServlet extends HttpServlet {
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String [] uriParts = req.getRequestURI().split("/");
         int targetId = Integer.parseInt(uriParts[uriParts.length - 1]);
-        Movie foundMovie = null;
         try {
             dao.delete(targetId);
             PrintWriter out = resp.getWriter();
-            out.println(foundMovie.getTitle() + " has been deleted.");
+            out.println("Movie has been deleted.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
